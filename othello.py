@@ -43,11 +43,6 @@ class Board:
         self.board[y][x] = player
         for flanked in available[(x,y)]:
             self.board[flanked[1]][flanked[0]] = player
-            
-        for y in range(0, 8): 
-            for x in range(0, 8):
-                if self.board[y][x].isdigit():
-                    self.board[y][x] = ' '
 
     def apply_move(self, move, player, available):
         new_board = Board(self.board)
@@ -57,15 +52,9 @@ class Board:
         for flanked in available[(x,y)]:
             new_board.board[flanked[1]][flanked[0]] = player
 
-        for y in range(0, 8): 
-            for x in range(0, 8):
-                if self.board[y][x].isdigit():
-                    self.board[y][x] = ' '
-
         return new_board
 
     def find_available_moves(self, player):
-
         available_moves = {}  
 
         for y in range(0, 8): 
@@ -75,15 +64,12 @@ class Board:
                         for xdir in range(-1, 2):
                             if xdir == 0 and ydir == 0:
                                 continue
-                           
+                            
                             move, flipped = self.search(x, y, xdir, ydir, player)
                             if move and flipped: 
                                 if move not in available_moves:
                                     available_moves[move] = set()
                                 available_moves[move].update(flipped)  
-
-        for move in available_moves:
-            self.board[move[1]][move[0]] = str(len(available_moves[move]))
 
         return available_moves
     
@@ -136,17 +122,10 @@ class Board:
         for y in range(0,8):
             for x in range(0,8):
                 if self.board[x][y] == color:
-                    score += self.WEIGHTED_BOARD[y][x-1]
+                    score += self.WEIGHTED_BOARD[y][x]
                 elif self.board[x][y] == opp_color:
-                    score -= self.WEIGHTED_BOARD[y][x-1]
+                    score -= self.WEIGHTED_BOARD[y][x]
         return score
-    
-    def end_game(self):
-        for y in range(0,8):
-            for x in range(0,8):
-                if self.board[y][x].isdigit():
-                    return False
-        return True
     
 class Othello:
     def __init__(self):
@@ -178,14 +157,14 @@ class Othello:
         prompt = "Pick a game mode: "
         game_mode = self.get_choice(modes, prompt)
         if game_mode == "CNN Black":
-            self.CVC(5, 'B')
+            self.CVC(2, 'B')
         elif game_mode == "CNN White":
-            self.CVC(5, 'W')
+            self.CVC(2, 'W')
 
     def CVC(self, minimax_depth, CNN_move):
         count = 60
         model = load_trained_model()
-        while count != 0:
+        while count >= 0:
             color = getattr(self, f"player_{(count%2) + 1}")
             if color == 'W':
                 opp_color = 'B'
@@ -223,14 +202,14 @@ class Othello:
             print("Player 2 wins")
 
     def minimax(self, board, depth, is_maximizing, alpha, beta, color, opp_color):
-        if depth == 0 or board.end_game():
+        available = board.find_available_moves(color)
+        if depth == 0 or not available:
             return None, board.evaluate(color, opp_color)
 
-        best_move = None
+        best_move = next(iter(available))
 
         if is_maximizing:
             max_eval = float('-inf')
-            available = board.find_available_moves(color)
             for move in available:
                 new_board = board.apply_move(move, color, available)
                 _, eval = self.minimax(new_board, depth - 1, False, alpha, beta, color, opp_color)
@@ -241,10 +220,8 @@ class Othello:
                 if alpha >= beta:
                     break
             return best_move, max_eval
-
         else:
             min_eval = float('inf')
-            available = board.find_available_moves(opp_color)
             for move in available:
                 new_board = board.apply_move(move, opp_color, available)
                 _, eval = self.minimax(new_board, depth - 1, True, alpha, beta, color, opp_color)
