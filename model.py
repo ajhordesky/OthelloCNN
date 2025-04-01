@@ -32,26 +32,55 @@ def load_model(model_path="othello_cnn_model.pth"):
     return model
 
 def is_valid_move(board, row, col, player):
-    if row < 0 or row >= 8 or col < 0 or col >= 8 or board[row][col] != 0:
+    available = find_available_moves(board, player)
+    if (col, row) in available:
+        return True
+    else:
         return False
 
-    directions = [(-1, -1), (-1, 0), (-1, 1),
-                  (0, -1),          (0, 1),
-                  (1, -1),  (1, 0), (1, 1)]
+def find_available_moves(board, player):
+    available_moves = {}  
 
-    for dr, dc in directions:
-        r, c = row + dr, col + dc
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c] == -player:
-            r += dr
-            c += dc
-            while 0 <= r < 8 and 0 <= c < 8:
-                if board[r][c] == player:
-                    return True
-                if board[r][c] == 0:
-                    break
-                r += dr
-                c += dc
-    return False
+    for y in range(0, 8): 
+        for x in range(0, 8):  
+            if board[y][x] == player:  
+                for ydir in range(-1, 2):  
+                    for xdir in range(-1, 2):
+                        if xdir == 0 and ydir == 0:
+                            continue
+                        
+                        move, flipped = search(x, y, xdir, ydir, board, player)
+                        if move and flipped: 
+                            if move not in available_moves:
+                                available_moves[move] = set()
+                            available_moves[move].update(flipped)  
+
+    return available_moves
+
+def search(x, y, xdir, ydir, board, player):
+    included = []
+
+    for dist in range(1, 9):
+        xCurr = x + dist * xdir
+        yCurr = y + dist * ydir
+
+        
+        if xCurr < 0 or xCurr > len(board) - 1 or yCurr < 0 or yCurr > len(board) - 1:
+            return None, []
+
+        
+        if board[yCurr][xCurr] == -player:
+            included.append((xCurr, yCurr))
+        elif board[yCurr][xCurr] == player:
+            return None, []  
+        else: 
+            if included:  
+                return (xCurr, yCurr), included
+            return None, []
+
+    return None, []
+
+
 
 def predict_move(model, board, player):
     model.eval()
