@@ -1,6 +1,7 @@
 import os
 from model import OthelloCNN, predict_move  # Import the model class and predict function
 import torch
+import time
 def load_trained_model(model_path="othello_cnn_model.pth"):
         # Initialize the model with the same architecture
         model = OthelloCNN()
@@ -157,9 +158,9 @@ class Othello:
         prompt = "Pick a game mode: "
         game_mode = self.get_choice(modes, prompt)
         if game_mode == "CNN Black":
-            self.CVC(2, 'B')
+            self.CVC(5, 'B')
         elif game_mode == "CNN White":
-            self.CVC(2, 'W')
+            self.CVC(8, 'W')
 
     def CVC(self, minimax_depth, CNN_move):
         count = 60
@@ -182,7 +183,7 @@ class Othello:
             elif color == CNN_move and len(available) > 0:
                 temp_board = [[1 if col == 'B' else -1 if col == 'W' else 0 for col in row] for row in self.board.board]
                 new_board = torch.tensor(temp_board, dtype=torch.float32)
-                move = predict_move(model, new_board, player=1 if CNN_move == 'B' else -1)  # Black's turn
+                move = predict_move(model, new_board, player=1 if CNN_move == 'B' else -1)
                 move = (move[1],move[0])
                 self.clear_console()
                 self.board.print_board()
