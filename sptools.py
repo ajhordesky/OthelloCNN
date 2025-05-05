@@ -1,5 +1,5 @@
 import os
-from model import OthelloCNN, predict_move  # Import the model class and predict function
+from model import OthelloCNN, predict_move
 import torch
 import time
 
