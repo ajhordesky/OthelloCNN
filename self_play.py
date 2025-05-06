@@ -14,7 +14,7 @@ class SelfPlay:
         # Initialize model
         self.model = OthelloCNN().to(self.device)
         try:
-            self.model.load_state_dict(torch.load('othello_cnn.pth'))
+            self.model.load_state_dict(torch.load('othello_final_model.pth'))
             print("Loaded existing model")
         except:
             print("Initializing new model")
